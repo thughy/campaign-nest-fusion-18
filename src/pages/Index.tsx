@@ -1,13 +1,24 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import { CampaignLayout } from '@/components/CampaignLayout';
+import { CampaignHeader } from '@/components/CampaignHeader';
+import { CampaignList } from '@/components/CampaignList';
+import { mockCampaigns } from '@/data/mockCampaigns';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <CampaignLayout>
+      <CampaignHeader />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-medium">Todas las campañas</h2>
+          <div className="flex gap-2 text-sm">
+            <span className="text-muted-foreground">Total: {mockCampaigns.length}</span>
+          </div>
+        </div>
+        <CampaignList campaigns={mockCampaigns} />
       </div>
-    </div>
+    </CampaignLayout>
   );
 };
 
