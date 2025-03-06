@@ -1,12 +1,15 @@
 
 import React, { useState } from 'react';
-import { Campaign } from '@/types/campaign.types';
+import { Campaign, CampaignTab } from '@/types/campaign.types';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Clock, Calendar } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronDown, ChevronUp, Clock, Calendar, MapPin, Globe } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { SourceItem } from './SourceItem';
+import { CityItem } from './CityItem';
 import { YearItem } from './YearItem';
 
 interface CampaignCardProps {
@@ -15,6 +18,26 @@ interface CampaignCardProps {
 
 export function CampaignCard({ campaign }: CampaignCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<CampaignTab>("years");
+
+  // Helper functions for getting all cities and sources across years
+  const getAllCities = () => {
+    const cities = [];
+    for (const year of campaign.years) {
+      cities.push(...year.cities);
+    }
+    return cities;
+  };
+
+  const getAllSources = () => {
+    const sources = [];
+    for (const year of campaign.years) {
+      for (const city of year.cities) {
+        sources.push(...city.sources);
+      }
+    }
+    return sources;
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -86,11 +109,42 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
         <CardContent 
           className="p-0 animate-slide-in-bottom"
         >
-          <div className="p-4 sm:p-6 space-y-4">
-            {campaign.years.map((year) => (
-              <YearItem key={year.id} year={year} />
-            ))}
-          </div>
+          <Tabs 
+            defaultValue="years" 
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as CampaignTab)}
+            className="p-4 sm:p-6"
+          >
+            <TabsList className="mb-4 grid grid-cols-3 w-full max-w-md">
+              <TabsTrigger value="years" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" /> Años
+              </TabsTrigger>
+              <TabsTrigger value="cities" className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" /> Ciudades
+              </TabsTrigger>
+              <TabsTrigger value="sources" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" /> Fuentes
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="years" className="space-y-4 animate-fade-in">
+              {campaign.years.map((year) => (
+                <YearItem key={year.id} year={year} />
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="cities" className="space-y-4 animate-fade-in">
+              {getAllCities().map((city) => (
+                <CityItem key={city.id} city={city} />
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="sources" className="space-y-4 animate-fade-in">
+              {getAllSources().map((source) => (
+                <SourceItem key={source.id} source={source} />
+              ))}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       )}
     </Card>

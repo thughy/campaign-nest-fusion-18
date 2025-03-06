@@ -32,3 +32,6 @@ export interface Campaign {
   created: string;
   years: Year[];
 }
+
+// Adding these types to support our tabs navigation
+export type CampaignTab = "years" | "cities" | "sources";
