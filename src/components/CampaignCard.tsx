@@ -107,75 +107,78 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
   return (
     <Card className="w-full mb-4 overflow-hidden transition-all shadow-sm hover:shadow-md rounded-xl">
       <CardHeader className="p-4 sm:p-6 bg-white">
-        <div className="flex flex-col space-y-4">
-          {/* Header with title and status badge */}
-          <div className="flex justify-between items-start">
-            <div className="space-y-2">
-              <Badge variant="outline" className={`rounded-full px-3 py-1 ${getStatusColor(campaign.status)}`}>
-                {getStatusLabel(campaign.status)}
-              </Badge>
-              <h3 className="font-bold text-xl">{campaign.name}</h3>
-            </div>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
-          </div>
-          
-          {/* Info rows with icons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                <User className="h-5 w-5 text-slate-600" />
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left side with campaign info */}
+          <div className="flex-1 space-y-4">
+            {/* Header with title and status badge */}
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <Badge variant="outline" className={`rounded-full px-3 py-1 ${getStatusColor(campaign.status)}`}>
+                  {getStatusLabel(campaign.status)}
+                </Badge>
+                <h3 className="font-bold text-xl">{campaign.name}</h3>
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">Creador</span>
-                <span className="font-medium">{campaign.creator || 'Admin'}</span>
-              </div>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
             </div>
             
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-slate-600" />
+            {/* Info rows with icons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <User className="h-5 w-5 text-slate-600" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground">Creador</span>
+                  <span className="font-medium">{campaign.creator || 'Admin'}</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">Fecha de creación</span>
-                <span className="font-medium">{formattedCreatedDate}</span>
+              
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-slate-600" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground">Fecha de creación</span>
+                  <span className="font-medium">{formattedCreatedDate}</span>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-slate-600" />
+              
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-slate-600" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground">Leads generados</span>
+                  <span className="font-medium">{campaign.leads?.toLocaleString() || '0'} leads</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">Leads generados</span>
-                <span className="font-medium">{campaign.leads?.toLocaleString() || '0'} leads</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                <Globe className="h-5 w-5 text-slate-600" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">Redes sociales</span>
-                <div className="flex gap-1">
-                  {campaign.socialNetworks && campaign.socialNetworks.length > 0 ? (
-                    campaign.socialNetworks.map((network, idx) => (
-                      <div key={idx} className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center">
-                        {getSocialIcon(network)}
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-muted-foreground">Ninguna</span>
-                  )}
+              
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Globe className="h-5 w-5 text-slate-600" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground">Redes sociales</span>
+                  <div className="flex gap-1">
+                    {campaign.socialNetworks && campaign.socialNetworks.length > 0 ? (
+                      campaign.socialNetworks.map((network, idx) => (
+                        <div key={idx} className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center">
+                          {getSocialIcon(network)}
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-muted-foreground">Ninguna</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Performance chart */}
-          <div className="mt-4 p-4 border rounded-lg bg-white/50">
+          {/* Right side with performance chart */}
+          <div className="flex-1 md:max-w-[350px] p-4 border rounded-lg bg-white/50">
             <div className="flex justify-between items-center mb-2">
               <div className="text-sm font-medium flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-primary" />
