@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Source } from '@/types/campaign.types';
-import { Facebook, Instagram, Search, MessageCircle, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp, Globe, Facebook, Instagram, Search, MessageCircle } from "lucide-react";
 import { TagItem } from './TagItem';
 
 interface SourceItemProps {
@@ -9,6 +10,8 @@ interface SourceItemProps {
 }
 
 export function SourceItem({ source }: SourceItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const getSourceIcon = (name: string) => {
     switch (name.toLowerCase()) {
       case 'facebook':
@@ -25,20 +28,39 @@ export function SourceItem({ source }: SourceItemProps) {
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden transition-all-smooth">
-      <div className="p-3 bg-background hover:bg-secondary/20 border-b">
+    <div className="border rounded-lg overflow-hidden ml-6 transition-all-smooth">
+      <div 
+        className="flex items-center justify-between p-2.5 bg-background hover:bg-secondary/20 border-b cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center gap-2">
           {getSourceIcon(source.name)}
-          <span className="font-medium">{source.name}</span>
-          <span className="text-xs text-muted-foreground">({source.platform})</span>
+          <span>{source.name}</span>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+        >
+          {isExpanded ? (
+            <ChevronUp className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5" />
+          )}
+        </Button>
       </div>
       
-      <div className="p-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-        {source.adTags.map((tag) => (
-          <TagItem key={tag.id} tag={tag} />
-        ))}
-      </div>
+      {isExpanded && (
+        <div className="p-2 animate-fade-in">
+          {source.adTags.map((tag) => (
+            <TagItem key={tag.id} tag={tag} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
