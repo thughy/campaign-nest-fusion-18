@@ -4,18 +4,16 @@ import { Campaign } from '@/types/campaign.types';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Clock, Calendar } from "lucide-react";
+import { ChevronRight, Clock, BarChart } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { YearItem } from './YearItem';
+import { Link } from 'react-router-dom';
 
 interface CampaignCardProps {
   campaign: Campaign;
 }
 
 export function CampaignCard({ campaign }: CampaignCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -46,53 +44,67 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
     }
   };
 
+  // Generate random stats preview if none exists
+  const stats = campaign.stats || {
+    impressions: Math.floor(Math.random() * 100000),
+    clicks: Math.floor(Math.random() * 10000),
+    conversions: Math.floor(Math.random() * 1000),
+    ctr: Math.random() * 10,
+    conversionRate: Math.random() * 5,
+    spend: Math.random() * 5000
+  };
+
   const created = new Date(campaign.created);
   const timeAgo = formatDistanceToNow(created, { addSuffix: true, locale: es });
 
   return (
-    <Card className={`w-full mb-4 overflow-hidden transition-all-smooth ${isExpanded ? 'shadow-md' : 'shadow-sm hover:shadow-md'}`}>
-      <CardHeader className="p-4 sm:p-6 bg-card border-b">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Badge className={`${getStatusColor(campaign.status)}`}>
-                {getStatusLabel(campaign.status)}
-              </Badge>
-              <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{timeAgo}</span>
+    <Card className="w-full mb-4 overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer group">
+      <Link to={`/campaign/${campaign.id}`} className="block">
+        <CardHeader className="p-4 sm:p-6 bg-card border-b">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge className={`${getStatusColor(campaign.status)}`}>
+                  {getStatusLabel(campaign.status)}
+                </Badge>
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  <span>{timeAgo}</span>
+                </div>
               </div>
+              <h3 className="font-medium text-xl">{campaign.name}</h3>
+              {campaign.description && (
+                <p className="text-sm text-muted-foreground">{campaign.description}</p>
+              )}
             </div>
-            <h3 className="font-medium text-xl">{campaign.name}</h3>
-            {campaign.description && (
-              <p className="text-sm text-muted-foreground">{campaign.description}</p>
-            )}
+            
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex gap-6 mr-4">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Impresiones</p>
+                  <p className="font-medium">{stats.impressions.toLocaleString()}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Clicks</p>
+                  <p className="font-medium">{stats.clicks.toLocaleString()}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">CTR</p>
+                  <p className="font-medium">{stats.ctr.toFixed(2)}%</p>
+                </div>
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto group-hover:bg-primary/10 transition-all"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="self-start sm:self-center transition-all hover:bg-secondary"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-5 w-5" />
-            ) : (
-              <ChevronDown className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-      </CardHeader>
-      {isExpanded && (
-        <CardContent 
-          className="p-0 animate-slide-in-bottom"
-        >
-          <div className="p-4 sm:p-6 space-y-4">
-            {campaign.years.map((year) => (
-              <YearItem key={year.id} year={year} />
-            ))}
-          </div>
-        </CardContent>
-      )}
+        </CardHeader>
+      </Link>
     </Card>
   );
 }
