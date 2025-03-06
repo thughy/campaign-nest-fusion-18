@@ -24,21 +24,11 @@ export interface Year {
   cities: City[];
 }
 
-export interface PerformanceData {
-  date: string;
-  value: number;
-}
-
 export interface Campaign {
   id: string;
   name: string;
   description?: string;
   status: 'active' | 'inactive' | 'scheduled' | 'completed';
   created: string;
-  publishedDate?: string;
-  creator?: string;
-  leads?: number;
-  socialNetworks?: string[];
-  performance?: PerformanceData[];
   years: Year[];
 }
