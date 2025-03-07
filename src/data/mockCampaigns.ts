@@ -1,4 +1,3 @@
-
 import { Campaign } from '../types/campaign.types';
 
 export const mockCampaigns: Campaign[] = [
@@ -8,6 +7,8 @@ export const mockCampaigns: Campaign[] = [
     description: 'Campaña principal para el tour de Milagros',
     status: 'active',
     created: '2024-01-15T09:00:00.000Z',
+    publishDate: '2024-02-01T09:00:00.000Z',
+    createdBy: 'Juan Pérez',
     years: [
       {
         id: 'y2024',
@@ -189,7 +190,16 @@ export const mockCampaigns: Campaign[] = [
           }
         ]
       }
-    ]
+    ],
+    stats: {
+      impressions: 98750,
+      clicks: 8234,
+      conversions: 823,
+      ctr: 8.34,
+      conversionRate: 10.0,
+      spend: 4325.5,
+      leadsRegistered: 376
+    }
   },
   {
     id: '2',
@@ -197,6 +207,8 @@ export const mockCampaigns: Campaign[] = [
     description: 'Campaña para el lanzamiento del nuevo producto',
     status: 'scheduled',
     created: '2024-02-20T14:30:00.000Z',
+    publishDate: '2024-04-15T10:00:00.000Z',
+    createdBy: 'Ana Martínez',
     years: [
       {
         id: 'y2024-2',
@@ -234,7 +246,16 @@ export const mockCampaigns: Campaign[] = [
           }
         ]
       }
-    ]
+    ],
+    stats: {
+      impressions: 12300,
+      clicks: 1520,
+      conversions: 215,
+      ctr: 12.36,
+      conversionRate: 14.14,
+      spend: 2150.25,
+      leadsRegistered: 98
+    }
   },
   {
     id: '3',
@@ -242,6 +263,8 @@ export const mockCampaigns: Campaign[] = [
     description: 'Promociones especiales de verano',
     status: 'inactive',
     created: '2023-12-10T11:15:00.000Z',
+    publishDate: '2024-06-01T09:00:00.000Z',
+    createdBy: 'Carlos Rodríguez',
     years: [
       {
         id: 'y2024-3',
@@ -285,6 +308,15 @@ export const mockCampaigns: Campaign[] = [
           }
         ]
       }
-    ]
+    ],
+    stats: {
+      impressions: 45670,
+      clicks: 3211,
+      conversions: 421,
+      ctr: 7.03,
+      conversionRate: 13.11,
+      spend: 3120.75,
+      leadsRegistered: 189
+    }
   }
 ];

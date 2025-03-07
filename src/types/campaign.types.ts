@@ -31,6 +31,7 @@ export interface CampaignStats {
   ctr: number; // Click-through rate (percentage)
   conversionRate: number; // Conversion rate (percentage)
   spend: number; // In dollars
+  leadsRegistered?: number; // New field for leads
 }
 
 export interface Campaign {
@@ -39,6 +40,8 @@ export interface Campaign {
   description?: string;
   status: 'active' | 'inactive' | 'scheduled' | 'completed';
   created: string;
+  publishDate?: string; // New field for publish date
+  createdBy?: string; // New field for creator
   years: Year[];
   stats?: CampaignStats;
 }
