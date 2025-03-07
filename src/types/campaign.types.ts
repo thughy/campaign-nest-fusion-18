@@ -46,4 +46,4 @@ export interface Campaign {
   stats?: CampaignStats;
 }
 
-export type FilterType = 'year' | 'city' | 'source';
+export type FilterType = 'year' | 'city' | 'source' | 'tag' | 'date';
