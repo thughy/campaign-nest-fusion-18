@@ -59,10 +59,7 @@ const availablePlatforms = [
 interface LocationItem {
   id: string;
   city: string;
-  sources: {
-    id: string;
-    platform: string;
-  }[];
+  selectedPlatforms: string[];
 }
 
 interface NewCampaignModalProps {
@@ -83,7 +80,7 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
     {
       id: `loc-${Date.now()}`,
       city: "",
-      sources: [{ id: `src-${Date.now()}`, platform: "" }],
+      selectedPlatforms: [],
     },
   ]);
 
@@ -94,48 +91,15 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
       {
         id: `loc-${Date.now()}`,
         city: "",
-        sources: [{ id: `src-${Date.now()}`, platform: "" }],
+        selectedPlatforms: [],
       },
     ]);
   };
 
   // Remove location
   const removeLocation = (locationId: string) => {
-    if (locations.length === 1) {
-      return; // Keep at least one location
-    }
+    if (locations.length === 1) return; // Keep at least one location
     setLocations(locations.filter((loc) => loc.id !== locationId));
-  };
-
-  // Add source to a location
-  const addSource = (locationId: string) => {
-    setLocations(
-      locations.map((loc) =>
-        loc.id === locationId
-          ? {
-              ...loc,
-              sources: [...loc.sources, { id: `src-${Date.now()}`, platform: "" }],
-            }
-          : loc
-      )
-    );
-  };
-
-  // Remove source from a location
-  const removeSource = (locationId: string, sourceId: string) => {
-    setLocations(
-      locations.map((loc) =>
-        loc.id === locationId
-          ? {
-              ...loc,
-              sources:
-                loc.sources.length === 1
-                  ? loc.sources // Keep at least one source
-                  : loc.sources.filter((src) => src.id !== sourceId),
-            }
-          : loc
-      )
-    );
   };
 
   // Update city for a location
@@ -147,19 +111,18 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
     );
   };
 
-  // Update platform for a source
-  const updatePlatform = (locationId: string, sourceId: string, platform: string) => {
+  // Update platforms for a location
+  const updatePlatforms = (locationId: string, platform: string) => {
     setLocations(
-      locations.map((loc) =>
-        loc.id === locationId
-          ? {
-              ...loc,
-              sources: loc.sources.map((src) =>
-                src.id === sourceId ? { ...src, platform } : src
-              ),
-            }
-          : loc
-      )
+      locations.map((loc) => {
+        if (loc.id === locationId) {
+          const platforms = loc.selectedPlatforms.includes(platform)
+            ? loc.selectedPlatforms.filter(p => p !== platform)
+            : [...loc.selectedPlatforms, platform];
+          return { ...loc, selectedPlatforms: platforms };
+        }
+        return loc;
+      })
     );
   };
 
@@ -197,14 +160,14 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
       return;
     }
     
-    // Check if all sources have platforms selected
+    // Check if all locations have at least one platform selected
     const invalidSource = locations.find(loc => 
-      loc.sources.some(src => !src.platform)
+      loc.selectedPlatforms.length === 0
     );
     if (invalidSource) {
       toast({
         title: "Error",
-        description: "Todas las fuentes deben tener una plataforma seleccionada",
+        description: "Todas las ubicaciones deben tener al menos una plataforma seleccionada",
         variant: "destructive",
       });
       return;
@@ -225,10 +188,10 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
           cities: locations.map(loc => ({
             id: `city-${Date.now()}-${loc.city.replace(/\s+/g, '-').toLowerCase()}`,
             name: loc.city,
-            sources: loc.sources.map(src => ({
-              id: `source-${Date.now()}-${src.platform.replace(/\s+/g, '-').toLowerCase()}`,
-              name: src.platform,
-              platform: src.platform.toLowerCase(),
+            sources: loc.selectedPlatforms.map(platform => ({
+              id: `source-${Date.now()}-${platform.replace(/\s+/g, '-').toLowerCase()}`,
+              name: platform,
+              platform: platform.toLowerCase(),
               adTags: [
                 {
                   id: `tag-${Date.now()}`,
@@ -267,7 +230,7 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
       {
         id: `loc-${Date.now()}`,
         city: "",
-        sources: [{ id: `src-${Date.now()}`, platform: "" }],
+        selectedPlatforms: [],
       },
     ]);
     onOpenChange(false);
@@ -383,7 +346,9 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
                 className="p-4 border rounded-md space-y-4 bg-card"
               >
                 <div className="flex justify-between items-start">
-                  <Label className="text-base font-medium">Ubicación {locIndex + 1}</Label>
+                  <Label className="text-base font-medium">
+                    Ubicación {locIndex + 1}
+                  </Label>
                   {locations.length > 1 && (
                     <Button
                       type="button"
@@ -398,6 +363,7 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
                 </div>
 
                 <div className="space-y-4">
+                  {/* City Selection */}
                   <div className="space-y-2">
                     <Label htmlFor={`city-${location.id}`}>Ciudad</Label>
                     <Select
@@ -407,7 +373,7 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
                       <SelectTrigger id={`city-${location.id}`}>
                         <SelectValue placeholder="Seleccionar Ciudad" />
                       </SelectTrigger>
-                      <SelectContent position="popper">
+                      <SelectContent>
                         {availableCities.map((city) => (
                           <SelectItem key={city} value={city}>
                             {city}
@@ -417,60 +383,23 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
                     </Select>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label>Fuentes</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addSource(location.id)}
-                        className="flex items-center gap-1"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span>Agregar Fuente</span>
-                      </Button>
+                  {/* Multi-select Platforms */}
+                  <div className="space-y-2">
+                    <Label>Plataformas</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {availablePlatforms.map((platform) => (
+                        <Button
+                          key={platform}
+                          type="button"
+                          size="sm"
+                          variant={location.selectedPlatforms.includes(platform) ? "default" : "outline"}
+                          onClick={() => updatePlatforms(location.id, platform)}
+                          className="transition-colors"
+                        >
+                          {platform}
+                        </Button>
+                      ))}
                     </div>
-
-                    {location.sources.map((source, srcIndex) => (
-                      <div
-                        key={source.id}
-                        className="flex items-center gap-2"
-                      >
-                        <div className="flex-1">
-                          <Select
-                            value={source.platform}
-                            onValueChange={(value) =>
-                              updatePlatform(location.id, source.id, value)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar Plataforma" />
-                            </SelectTrigger>
-                            <SelectContent position="popper">
-                              {availablePlatforms.map((platform) => (
-                                <SelectItem key={platform} value={platform}>
-                                  {platform}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {location.sources.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              removeSource(location.id, source.id)
-                            }
-                            className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -490,5 +419,4 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
+  </form>
