@@ -1,14 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { NewCampaignModal } from "@/components/NewCampaignModal";
 
 interface CampaignHeaderProps {
   className?: string;
 }
 
 export function CampaignHeader({ className }: CampaignHeaderProps) {
+  const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
+
   return (
     <header className={cn(
       "w-full py-6 mb-8 border-b transition-all-smooth",
@@ -21,11 +24,19 @@ export function CampaignHeader({ className }: CampaignHeaderProps) {
             Administra todas tus campañas de manera organizada
           </p>
         </div>
-        <Button className="animate-slide-in-right flex items-center gap-2 transition-all hover:scale-105">
+        <Button 
+          className="animate-slide-in-right flex items-center gap-2 transition-all hover:scale-105"
+          onClick={() => setShowNewCampaignModal(true)}
+        >
           <PlusCircle className="h-4 w-4" />
           <span>Nueva Campaña</span>
         </Button>
       </div>
+
+      <NewCampaignModal 
+        open={showNewCampaignModal} 
+        onOpenChange={setShowNewCampaignModal} 
+      />
     </header>
   );
 }
