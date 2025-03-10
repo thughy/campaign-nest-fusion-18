@@ -25,9 +25,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Define available cities and platforms for selection
 const availableCities = [
@@ -60,6 +61,7 @@ interface LocationItem {
   id: string;
   city: string;
   selectedPlatforms: string[];
+  expanded: boolean;
 }
 
 interface NewCampaignModalProps {
@@ -81,19 +83,36 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
       id: `loc-${Date.now()}`,
       city: "",
       selectedPlatforms: [],
+      expanded: true
     },
   ]);
 
   // Add new location
   const addLocation = () => {
+    // Collapse previous locations if they have data
+    const updatedLocations = locations.map(loc => ({
+      ...loc,
+      expanded: !loc.city || loc.selectedPlatforms.length === 0
+    }));
+    
     setLocations([
-      ...locations,
+      ...updatedLocations,
       {
         id: `loc-${Date.now()}`,
         city: "",
         selectedPlatforms: [],
+        expanded: true
       },
     ]);
+  };
+
+  // Toggle location expanded state
+  const toggleLocationExpand = (locationId: string) => {
+    setLocations(
+      locations.map(loc => 
+        loc.id === locationId ? { ...loc, expanded: !loc.expanded } : loc
+      )
+    );
   };
 
   // Remove location
@@ -231,6 +250,7 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
         id: `loc-${Date.now()}`,
         city: "",
         selectedPlatforms: [],
+        expanded: true
       },
     ]);
     onOpenChange(false);
@@ -340,70 +360,115 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
               </Button>
             </div>
 
-            {locations.map((location, locIndex) => (
-              <div
-                key={location.id}
-                className="p-4 border rounded-md space-y-4 bg-card"
-              >
-                <div className="flex justify-between items-start">
-                  <Label className="text-base font-medium">
-                    Ubicación {locIndex + 1}
-                  </Label>
-                  {locations.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeLocation(location.id)}
-                      className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  {/* City Selection */}
-                  <div className="space-y-2">
-                    <Label htmlFor={`city-${location.id}`}>Ciudad</Label>
-                    <Select
-                      value={location.city}
-                      onValueChange={(value) => updateCity(location.id, value)}
-                    >
-                      <SelectTrigger id={`city-${location.id}`}>
-                        <SelectValue placeholder="Seleccionar Ciudad" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableCities.map((city) => (
-                          <SelectItem key={city} value={city}>
-                            {city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Multi-select Platforms */}
-                  <div className="space-y-2">
-                    <Label>Plataformas</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {availablePlatforms.map((platform) => (
+            {locations.map((location, locIndex) => {
+              const isConfigured = location.city && location.selectedPlatforms.length > 0;
+              return (
+                <Card key={location.id} className="overflow-hidden transition-all duration-200">
+                  <div 
+                    className={cn(
+                      "flex justify-between items-center p-3 cursor-pointer",
+                      isConfigured && !location.expanded ? "border-b" : ""
+                    )}
+                    onClick={() => isConfigured && toggleLocationExpand(location.id)}
+                  >
+                    <div className="flex items-center">
+                      <span className="font-medium text-sm">
+                        Ubicación {locIndex + 1}: 
+                      </span>
+                      {location.city && (
+                        <span className="ml-2 text-sm">
+                          {location.city} 
+                          {location.selectedPlatforms.length > 0 && (
+                            <span className="text-muted-foreground ml-2">
+                              ({location.selectedPlatforms.length} plataformas)
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {locations.length > 1 && (
                         <Button
-                          key={platform}
                           type="button"
+                          variant="ghost"
                           size="sm"
-                          variant={location.selectedPlatforms.includes(platform) ? "default" : "outline"}
-                          onClick={() => updatePlatforms(location.id, platform)}
-                          className="transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeLocation(location.id);
+                          }}
+                          className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
-                          {platform}
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      ))}
+                      )}
+                      {isConfigured && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleLocationExpand(location.id);
+                          }}
+                          className="h-7 w-7 p-0"
+                        >
+                          {location.expanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                  
+                  {location.expanded && (
+                    <CardContent className="p-3 pt-3">
+                      <div className="space-y-4">
+                        {/* City Selection */}
+                        <div className="space-y-2">
+                          <Label htmlFor={`city-${location.id}`}>Ciudad</Label>
+                          <Select
+                            value={location.city}
+                            onValueChange={(value) => updateCity(location.id, value)}
+                          >
+                            <SelectTrigger id={`city-${location.id}`}>
+                              <SelectValue placeholder="Seleccionar Ciudad" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableCities.map((city) => (
+                                <SelectItem key={city} value={city}>
+                                  {city}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Multi-select Platforms */}
+                        <div className="space-y-2">
+                          <Label>Plataformas</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {availablePlatforms.map((platform) => (
+                              <Button
+                                key={platform}
+                                type="button"
+                                size="sm"
+                                variant={location.selectedPlatforms.includes(platform) ? "default" : "outline"}
+                                onClick={() => updatePlatforms(location.id, platform)}
+                                className="transition-colors"
+                              >
+                                {platform}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })}
           </div>
 
           <DialogFooter>
