@@ -419,4 +419,5 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
         </form>
       </DialogContent>
     </Dialog>
-  </form>
+  );
+}
