@@ -66,12 +66,20 @@ const legalLines = [
   "Visa Residencia"
 ];
 
-// Location type for our form
+// Date range type
+interface DateRangeType {
+  from: Date | undefined;
+  to: Date | undefined;
+}
+
+// Location type for our form with date ranges
 interface LocationItem {
   id: string;
   city: string;
   selectedPlatforms: string[];
   expanded: boolean;
+  neverEnds: boolean;
+  dateRange: DateRangeType;
 }
 
 interface NewCampaignModalProps {
@@ -83,20 +91,17 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
   const [campaignName, setCampaignName] = useState("");
   const [legalLine, setLegalLine] = useState("");
   const [description, setDescription] = useState("");
-  const [neverEnds, setNeverEnds] = useState(false);
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: undefined,
-    to: undefined,
-  });
   const [locations, setLocations] = useState<LocationItem[]>([
     {
       id: `loc-${Date.now()}`,
       city: "",
       selectedPlatforms: [],
-      expanded: true
+      expanded: true,
+      neverEnds: false,
+      dateRange: {
+        from: undefined,
+        to: undefined,
+      }
     },
   ]);
 
@@ -114,7 +119,12 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
         id: `loc-${Date.now()}`,
         city: "",
         selectedPlatforms: [],
-        expanded: true
+        expanded: true,
+        neverEnds: false,
+        dateRange: {
+          from: undefined,
+          to: undefined,
+        }
       },
     ]);
   };
@@ -158,6 +168,24 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
     );
   };
 
+  // Toggle never ends for a location
+  const toggleNeverEnds = (locationId: string, value: boolean) => {
+    setLocations(
+      locations.map(loc => 
+        loc.id === locationId ? { ...loc, neverEnds: value } : loc
+      )
+    );
+  };
+
+  // Update date range for a location
+  const updateDateRange = (locationId: string, dateRange: DateRangeType) => {
+    setLocations(
+      locations.map(loc => 
+        loc.id === locationId ? { ...loc, dateRange } : loc
+      )
+    );
+  };
+
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,15 +204,6 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
       toast({
         title: "Error",
         description: "Debe seleccionar un tipo de visa",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!neverEnds && (!dateRange.from || !dateRange.to)) {
-      toast({
-        title: "Error",
-        description: "El rango de fechas es obligatorio si la campaña no es permanente",
         variant: "destructive",
       });
       return;
@@ -213,6 +232,19 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
       });
       return;
     }
+    
+    // Check if locations without neverEnds have valid date ranges
+    const invalidDateRange = locations.find(
+      loc => !loc.neverEnds && (!loc.dateRange.from || !loc.dateRange.to)
+    );
+    if (invalidDateRange) {
+      toast({
+        title: "Error",
+        description: `La ubicación "${invalidDateRange.city}" necesita un rango de fechas válido`,
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Create new campaign object
     const newCampaign = {
@@ -220,11 +252,8 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
       name: campaignName,
       description: description,
       legalLine: legalLine,
-      neverEnds: neverEnds,
       status: 'scheduled' as const,
       created: new Date().toISOString(),
-      publishDate: neverEnds ? null : dateRange.from?.toISOString(),
-      endDate: neverEnds ? null : dateRange.to?.toISOString(),
       createdBy: "Usuario Actual", // In a real app, get this from auth
       years: [
         {
@@ -233,6 +262,9 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
           cities: locations.map(loc => ({
             id: `city-${Date.now()}-${loc.city.replace(/\s+/g, '-').toLowerCase()}`,
             name: loc.city,
+            neverEnds: loc.neverEnds,
+            startDate: loc.neverEnds ? null : loc.dateRange.from?.toISOString(),
+            endDate: loc.neverEnds ? null : loc.dateRange.to?.toISOString(),
             sources: loc.selectedPlatforms.map(platform => ({
               id: `source-${Date.now()}-${platform.replace(/\s+/g, '-').toLowerCase()}`,
               name: platform,
@@ -272,14 +304,17 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
     setCampaignName("");
     setLegalLine("");
     setDescription("");
-    setNeverEnds(false);
-    setDateRange({ from: undefined, to: undefined });
     setLocations([
       {
         id: `loc-${Date.now()}`,
         city: "",
         selectedPlatforms: [],
-        expanded: true
+        expanded: true,
+        neverEnds: false,
+        dateRange: {
+          from: undefined,
+          to: undefined,
+        }
       },
     ]);
     onOpenChange(false);
@@ -342,90 +377,8 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
               </div>
             </div>
 
-            {/* Right Panel - Locations and Dates */}
+            {/* Right Panel - Locations */}
             <div className="w-full lg:w-[70%] p-6 space-y-6 overflow-y-auto">
-              {/* Date Range with Toggle */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Duración de la Campaña</Label>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="never-ends" className="text-sm cursor-pointer">
-                      Campaña Permanente
-                    </Label>
-                    <Switch
-                      id="never-ends"
-                      checked={neverEnds}
-                      onCheckedChange={setNeverEnds}
-                    />
-                  </div>
-                </div>
-
-                {!neverEnds && (
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "justify-start text-left font-normal w-full",
-                            !dateRange.from && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {dateRange.from ? (
-                            format(dateRange.from, "PPP")
-                          ) : (
-                            <span>Fecha de inicio</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={dateRange.from}
-                          onSelect={(date) =>
-                            setDateRange({ ...dateRange, from: date })
-                          }
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "justify-start text-left font-normal w-full",
-                            !dateRange.to && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {dateRange.to ? (
-                            format(dateRange.to, "PPP")
-                          ) : (
-                            <span>Fecha final</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={dateRange.to}
-                          onSelect={(date) => setDateRange({ ...dateRange, to: date })}
-                          disabled={(date) =>
-                            date < new Date() ||
-                            (dateRange.from ? date < dateRange.from : false)
-                          }
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
-              </div>
-
               {/* Locations Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -454,7 +407,7 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
                           )}
                           onClick={() => isConfigured && toggleLocationExpand(location.id)}
                         >
-                          <div className="flex items-center">
+                          <div className="flex items-center flex-wrap">
                             <span className="font-medium text-sm">
                               Ubicación {locIndex + 1}: 
                             </span>
@@ -464,6 +417,17 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
                                 {location.selectedPlatforms.length > 0 && (
                                   <span className="text-muted-foreground ml-2">
                                     ({location.selectedPlatforms.length} plataformas)
+                                  </span>
+                                )}
+                                {location.city && !location.neverEnds && location.dateRange.from && (
+                                  <span className="text-muted-foreground ml-2">
+                                    {format(location.dateRange.from, "dd/MM/yyyy")} 
+                                    {location.dateRange.to && ` - ${format(location.dateRange.to, "dd/MM/yyyy")}`}
+                                  </span>
+                                )}
+                                {location.city && location.neverEnds && (
+                                  <span className="text-muted-foreground ml-2">
+                                    [Permanente]
                                   </span>
                                 )}
                               </span>
@@ -526,6 +490,95 @@ export function NewCampaignModal({ open, onOpenChange }: NewCampaignModalProps) 
                                     ))}
                                   </SelectContent>
                                 </Select>
+                              </div>
+
+                              {/* Date Range with Toggle */}
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label>Duración de la Campaña</Label>
+                                  <div className="flex items-center gap-2">
+                                    <Label htmlFor={`never-ends-${location.id}`} className="text-sm cursor-pointer">
+                                      Campaña Permanente
+                                    </Label>
+                                    <Switch
+                                      id={`never-ends-${location.id}`}
+                                      checked={location.neverEnds}
+                                      onCheckedChange={(checked) => toggleNeverEnds(location.id, checked)}
+                                    />
+                                  </div>
+                                </div>
+
+                                {!location.neverEnds && (
+                                  <div className="flex flex-col sm:flex-row gap-2">
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          className={cn(
+                                            "justify-start text-left font-normal w-full",
+                                            !location.dateRange.from && "text-muted-foreground"
+                                          )}
+                                        >
+                                          <CalendarIcon className="mr-2 h-4 w-4" />
+                                          {location.dateRange.from ? (
+                                            format(location.dateRange.from, "PPP")
+                                          ) : (
+                                            <span>Fecha de inicio</span>
+                                          )}
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                          mode="single"
+                                          selected={location.dateRange.from}
+                                          onSelect={(date) =>
+                                            updateDateRange(location.id, { 
+                                              ...location.dateRange,
+                                              from: date 
+                                            })
+                                          }
+                                          initialFocus
+                                          className="p-3 pointer-events-auto"
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          className={cn(
+                                            "justify-start text-left font-normal w-full",
+                                            !location.dateRange.to && "text-muted-foreground"
+                                          )}
+                                        >
+                                          <CalendarIcon className="mr-2 h-4 w-4" />
+                                          {location.dateRange.to ? (
+                                            format(location.dateRange.to, "PPP")
+                                          ) : (
+                                            <span>Fecha final</span>
+                                          )}
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                          mode="single"
+                                          selected={location.dateRange.to}
+                                          onSelect={(date) => 
+                                            updateDateRange(location.id, { 
+                                              ...location.dateRange,
+                                              to: date 
+                                            })
+                                          }
+                                          disabled={(date) =>
+                                            (location.dateRange.from ? date < location.dateRange.from : false)
+                                          }
+                                          initialFocus
+                                          className="p-3 pointer-events-auto"
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Multi-select Platforms */}
